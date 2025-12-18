@@ -1,0 +1,1173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IT Advanced Features - Pro Dashboard</title>
+    
+    <!-- Premium Fonts: Plus Jakarta Sans (UI) & JetBrains Mono (Code) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    
+    <style>
+        /* --- DESIGN TOKENS --- */
+        :root {
+            /* Palette */
+            --bg-dark: #0f172a;
+            --glass-surface: rgba(255, 255, 255, 0.65);
+            --glass-border: 1px solid rgba(255, 255, 255, 0.6);
+            --glass-shine: linear-gradient(125deg, rgba(255,255,255,0.5) 0%, rgba(255,255,255,0.0) 40%, transparent 100%);
+            
+            /* Typography Colors */
+            --text-primary: #0f172a;
+            --text-secondary: #475569;
+            --text-light: #94a3b8;
+
+            /* Dynamic Brand Colors */
+            --brand-docs: #3b82f6;      /* Blue */
+            --brand-sheets: #10b981;    /* Emerald */
+            --brand-db: #f97316;        /* Orange */
+            --brand-default: #6366f1;   /* Indigo */
+
+            /* Animations */
+            --ease-elastic: cubic-bezier(0.34, 1.56, 0.64, 1);
+            --ease-smooth: cubic-bezier(0.25, 0.1, 0.25, 1);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #f8fafc;
+            color: var(--text-primary);
+            overflow: hidden; /* App-like feel */
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* --- AMBIENT BACKGROUND SYSTEM --- */
+        
+        /* 1. Animated Gradient Orbs */
+        .ambient-layer {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            z-index: -2;
+            background: #f1f5f9;
+            overflow: hidden;
+        }
+
+        .orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.6;
+            animation: float 20s infinite alternate ease-in-out;
+        }
+        .orb-1 { width: 60vw; height: 60vw; background: #e0e7ff; top: -20%; left: -10%; }
+        .orb-2 { width: 50vw; height: 50vw; background: #fae8ff; bottom: -10%; right: -10%; animation-delay: -5s; }
+        .orb-3 { width: 30vw; height: 30vw; background: #ccfbf1; top: 40%; left: 40%; animation-delay: -10s; }
+
+        @keyframes float {
+            0% { transform: translate(0, 0) scale(1); }
+            100% { transform: translate(40px, -20px) scale(1.1); }
+        }
+
+        /* 2. Film Grain Texture (Adds premium feel) */
+        .noise-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            z-index: -1;
+            opacity: 0.04;
+            pointer-events: none;
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+        }
+
+        /* --- SCROLL SNAP LAYOUT --- */
+        main {
+            height: 100vh;
+            overflow-y: scroll;
+            scroll-snap-type: y mandatory;
+            scroll-behavior: smooth;
+        }
+
+        section.slide {
+            height: 100vh;
+            width: 100%;
+            scroll-snap-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 2rem;
+            position: relative;
+            perspective: 1000px;
+        }
+
+        /* --- THE DASHBOARD CARD (Strict 16:9) --- */
+        .card {
+            /* This ensures strictly 16:9 aspect ratio that fits within the viewport */
+            width: min(90vw, 160vh);
+            height: min(50.625vw, 90vh);
+            aspect-ratio: 16 / 9;
+            
+            background: var(--glass-surface);
+            backdrop-filter: blur(40px) saturate(120%);
+            -webkit-backdrop-filter: blur(40px) saturate(120%);
+            border: var(--glass-border);
+            border-radius: 24px;
+            box-shadow: 
+                0 25px 50px -12px rgba(0, 0, 0, 0.1), 
+                0 0 0 1px rgba(255,255,255,0.5) inset;
+            
+            display: grid;
+            grid-template-columns: 280px 1fr; /* Sidebar + Main Content */
+            overflow: hidden;
+            position: relative;
+            
+            /* Initial State for Animation */
+            opacity: 0;
+            transform: translateY(30px) scale(0.98);
+            transition: all 0.8s var(--ease-smooth);
+        }
+
+        /* Active State */
+        section.slide.in-view .card {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        /* --- CARD: SIDEBAR --- */
+        .card-sidebar {
+            background: rgba(255,255,255,0.4);
+            border-right: 1px solid rgba(255,255,255,0.5);
+            padding: 2.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            z-index: 10;
+        }
+
+        .brand-logo {
+            font-weight: 800;
+            font-size: 1.1rem;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .brand-dot { 
+            width: 10px; height: 10px; 
+            background: var(--active-color, var(--brand-default)); 
+            border-radius: 50%; 
+            transition: background 0.5s;
+            box-shadow: 0 0 10px var(--active-color, var(--brand-default));
+        }
+
+        /* Progress Tracker */
+        .unit-tracker {
+            display: flex;
+            flex-direction: column;
+            gap: 1.25rem;
+        }
+
+        .tracker-item {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-light);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: all 0.3s;
+            cursor: default;
+        }
+
+        .tracker-item.active { 
+            color: var(--text-primary); 
+            transform: translateX(5px);
+        }
+        
+        .tracker-item.active::before {
+            content: ''; width: 6px; height: 6px; 
+            background: currentColor; border-radius: 50%;
+        }
+
+        .slide-meta {
+            font-size: 0.7rem;
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* --- CARD: CONTENT AREA --- */
+        .card-content {
+            padding: 3rem 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Specular Shine Overlay */
+        .card-content::before {
+            content: ''; position: absolute; top:0; left:0; width:100%; height:100%;
+            background: var(--glass-shine); pointer-events: none; z-index: 0;
+        }
+
+        /* --- TYPOGRAPHY & ELEMENTS --- */
+        .content-layer { z-index: 1; position: relative; }
+
+        h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            line-height: 1.1;
+            letter-spacing: -0.03em;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(180deg, #1e293b 0%, #475569 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        h2 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 1rem;
+            color: var(--text-primary);
+        }
+
+        p {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--text-secondary);
+            margin-bottom: 2rem;
+            max-width: 60ch;
+        }
+
+        /* Info Grids for Depth */
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        .info-box {
+            background: rgba(255,255,255,0.5);
+            border: 1px solid rgba(255,255,255,0.6);
+            padding: 1.25rem;
+            border-radius: 12px;
+            backdrop-filter: blur(5px);
+            transition: transform 0.3s;
+        }
+        
+        .info-box:hover { transform: translateY(-2px); background: rgba(255,255,255,0.7); }
+
+        .info-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--active-color, var(--text-light));
+            margin-bottom: 0.5rem;
+            font-weight: 800;
+        }
+
+        .info-value {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            line-height: 1.4;
+        }
+
+        /* Technical Code Blocks */
+        .code-block {
+            font-family: 'JetBrains Mono', monospace;
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 1.5rem;
+            border-radius: 12px;
+            font-size: 0.85rem;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.3);
+            margin-top: 1rem;
+        }
+
+        .code-block::before {
+            content: 'SYNTAX';
+            position: absolute;
+            top: 0.5rem; right: 0.5rem;
+            font-size: 0.6rem;
+            color: rgba(255,255,255,0.3);
+            letter-spacing: 1px;
+        }
+
+        /* --- DECORATIVE ART --- */
+        .art-layer {
+            position: absolute;
+            right: -10%; bottom: -20%;
+            width: 500px; height: 500px;
+            z-index: 0;
+            opacity: 0.15;
+            pointer-events: none;
+        }
+
+        .abstract-shape {
+            width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 50%, var(--active-color), transparent 70%);
+            border-radius: 50%;
+            filter: blur(60px);
+            animation: pulse 6s infinite alternate;
+        }
+
+        @keyframes pulse {
+            0% { transform: scale(0.9); opacity: 0.4; }
+            100% { transform: scale(1.1); opacity: 0.7; }
+        }
+
+        /* --- STAGGERED ENTRANCE ANIMATIONS --- */
+        .reveal-item {
+            opacity: 0;
+            transform: translateY(15px);
+            transition: all 0.6s var(--ease-smooth);
+        }
+
+        section.slide.in-view .reveal-item:nth-child(1) { transition-delay: 0.1s; opacity: 1; transform: translateY(0); }
+        section.slide.in-view .reveal-item:nth-child(2) { transition-delay: 0.2s; opacity: 1; transform: translateY(0); }
+        section.slide.in-view .reveal-item:nth-child(3) { transition-delay: 0.3s; opacity: 1; transform: translateY(0); }
+        section.slide.in-view .reveal-item:nth-child(4) { transition-delay: 0.4s; opacity: 1; transform: translateY(0); }
+
+        /* --- THEME OVERRIDES --- */
+        /* These classes are applied to sections to change color via CSS vars */
+        .theme-docs { --active-color: var(--brand-docs); }
+        .theme-sheets { --active-color: var(--brand-sheets); }
+        .theme-db { --active-color: var(--brand-db); }
+        .theme-default { --active-color: var(--brand-default); }
+
+        /* Mobile Responsiveness */
+        @media (max-width: 900px) {
+            .card {
+                grid-template-columns: 1fr;
+                width: 95vw; height: auto; min-height: 80vh;
+                padding-bottom: 2rem;
+            }
+            .card-sidebar {
+                flex-direction: row;
+                padding: 1.5rem;
+                border-bottom: 1px solid rgba(255,255,255,0.5);
+                border-right: none;
+            }
+            .unit-tracker { display: none; } /* Simplify for mobile */
+            .card-content { padding: 2rem; }
+            h1 { font-size: 2.5rem; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Ambient Background Layers -->
+    <div class="ambient-layer">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+    </div>
+    <div class="noise-overlay"></div>
+
+    <main id="scroller">
+
+        <!-- ============================================ -->
+        <!-- INTRO SECTION -->
+        <!-- ============================================ -->
+
+        <!-- SLIDE 1: Cover -->
+        <section class="slide theme-default">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>IT PROJECT</div>
+                    <div class="slide-meta">01 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <div class="reveal-item info-label">Course 402: Information Technology</div>
+                        <h1 class="reveal-item">Advanced Features &<br>Application Mastery</h1>
+                        <p class="reveal-item">A comprehensive digital portfolio covering Documentation, Analysis, and Database Management.</p>
+                        <div class="reveal-item info-grid">
+                            <div class="info-box">
+                                <div class="info-label">Student Name</div>
+                                <div class="info-value">[Insert Name Here]</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Academic Year</div>
+                                <div class="info-value">2024 - 2025</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 2: Acknowledgement -->
+        <section class="slide theme-default">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>IT PROJECT</div>
+                    <div class="slide-meta">02 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <h2 class="reveal-item">Acknowledgement</h2>
+                        <p class="reveal-item">I would like to express my special thanks of gratitude to my teacher as well as our principal who gave me the golden opportunity to do this wonderful project on the topic "IT Advanced Features".</p>
+                        <div class="reveal-item info-grid">
+                            <div class="info-box">
+                                <div class="info-label">Guidance</div>
+                                <div class="info-value">Research Support</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Support</div>
+                                <div class="info-value">Faculty & Parents</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 3: Certificate -->
+        <section class="slide theme-default">
+            <div class="card" style="border-top: 4px solid #f59e0b;">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot" style="background:#f59e0b"></div>CERTIFIED</div>
+                    <div class="slide-meta">03 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <div class="reveal-item" style="width:50px; height:50px; background:#fffbeb; border-radius:50%; display:flex; align-items:center; justify-content:center; margin-bottom:1.5rem;">
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#f59e0b" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><path d="M22 4L12 14.01l-3-3"/></svg>
+                        </div>
+                        <h2 class="reveal-item">Certificate of Completion</h2>
+                        <p class="reveal-item">This is to certify that <strong>[Student Name]</strong> has successfully completed the project work on Information Technology. This project is a genuine work done by the student.</p>
+                        <div class="reveal-item" style="display:flex; gap:3rem; margin-top:2rem; border-top:1px solid rgba(0,0,0,0.1); padding-top:1.5rem;">
+                            <div>
+                                <div class="info-label">Internal</div>
+                                <div style="font-family:'Brush Script MT', cursive; font-size:1.5rem;">Signed</div>
+                            </div>
+                            <div>
+                                <div class="info-label">External</div>
+                                <div style="font-family:'Brush Script MT', cursive; font-size:1.5rem;">Signed</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 4: TOC -->
+        <section class="slide theme-default">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>INDEX</div>
+                    <div class="slide-meta">04 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <h2 class="reveal-item">Table of Contents</h2>
+                        <div class="reveal-item info-grid" style="grid-template-columns: repeat(3, 1fr);">
+                            <div class="info-box" style="border-left: 3px solid var(--brand-docs);">
+                                <div class="info-label" style="color:var(--brand-docs)">Unit 1</div>
+                                <div class="info-value">Digital Documentation</div>
+                                <div style="font-size:0.8rem; margin-top:0.5rem; opacity:0.7;">Styles, Images, Mail Merge</div>
+                            </div>
+                            <div class="info-box" style="border-left: 3px solid var(--brand-sheets);">
+                                <div class="info-label" style="color:var(--brand-sheets)">Unit 2</div>
+                                <div class="info-value">Spreadsheets</div>
+                                <div style="font-size:0.8rem; margin-top:0.5rem; opacity:0.7;">Analysis, Goal Seek, Macros</div>
+                            </div>
+                            <div class="info-box" style="border-left: 3px solid var(--brand-db);">
+                                <div class="info-label" style="color:var(--brand-db)">Unit 3</div>
+                                <div class="info-value">RDBMS</div>
+                                <div style="font-size:0.8rem; margin-top:0.5rem; opacity:0.7;">Keys, SQL, Integrity</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- UNIT 1: DOCS -->
+        <!-- ============================================ -->
+
+        <!-- SLIDE 5: Writer Template -->
+        <section class="slide theme-docs">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>WRITER</div>
+                    <div class="unit-tracker">
+                        <div class="tracker-item active">Documentation</div>
+                        <div class="tracker-item">Spreadsheets</div>
+                        <div class="tracker-item">Database</div>
+                    </div>
+                    <div class="slide-meta">05 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <div class="info-label">Efficiency Tool</div>
+                        <h2 class="reveal-item">Writer Templates</h2>
+                        <p class="reveal-item">A template acts as a reusable blueprint. Instead of formatting every new report from scratch, you load a template that contains pre-set styles, logos, and headers.</p>
+                        <div class="reveal-item info-grid">
+                            <div class="info-box">
+                                <div class="info-label">File Extension</div>
+                                <div class="info-value">.ott (OpenDoc Template)</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Key Benefit</div>
+                                <div class="info-value">Corporate Consistency</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 6: Cropping -->
+        <section class="slide theme-docs">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>WRITER</div>
+                    <div class="unit-tracker">
+                        <div class="tracker-item active">Documentation</div>
+                        <div class="tracker-item">Spreadsheets</div>
+                        <div class="tracker-item">Database</div>
+                    </div>
+                    <div class="slide-meta">06 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <div class="info-label">Image Manipulation</div>
+                        <h2 class="reveal-item">Image Cropping</h2>
+                        <p class="reveal-item">Cropping removes peripheral areas of an image to improve framing. In Writer, this process is non-destructive, meaning the original image data is retained.</p>
+                        <div class="reveal-item info-box" style="margin-top:1rem;">
+                            <div class="info-label">Pro Tip</div>
+                            <div class="info-value">Right-click > Picture > Crop. Select "Keep Scale" to avoid distortion.</div>
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 7: Drawing -->
+        <section class="slide theme-docs">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>WRITER</div>
+                    <div class="unit-tracker">
+                        <div class="tracker-item active">Documentation</div>
+                        <div class="tracker-item">Spreadsheets</div>
+                        <div class="tracker-item">Database</div>
+                    </div>
+                    <div class="slide-meta">07 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <div class="info-label">Vector Tools</div>
+                        <h2 class="reveal-item">Drawing Objects</h2>
+                        <p class="reveal-item">Writer includes a built-in vector graphics editor. You can insert shapes, flowcharts, and callouts that scale infinitely without pixelation.</p>
+                        <div class="reveal-item info-grid">
+                            <div class="info-box">
+                                <div class="info-label">Access</div>
+                                <div class="info-value">View > Toolbars > Drawing</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Capabilities</div>
+                                <div class="info-value">Grouping, Layering, 3D</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 8: Inserting Images -->
+        <section class="slide theme-docs">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>WRITER</div>
+                    <div class="unit-tracker">
+                        <div class="tracker-item active">Documentation</div>
+                        <div class="tracker-item">Spreadsheets</div>
+                        <div class="tracker-item">Database</div>
+                    </div>
+                    <div class="slide-meta">08 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <h2 class="reveal-item">Inserting Images</h2>
+                        <p class="reveal-item">There are three professional methods to embed visuals into your document:</p>
+                        <div class="reveal-item info-grid">
+                            <div class="info-box">
+                                <div class="info-label">01. Drag & Drop</div>
+                                <div class="info-value">Fastest workflow</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">02. Insert Menu</div>
+                                <div class="info-value">Precise file selection</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">03. Clipboard</div>
+                                <div class="info-value">Copy/Paste from apps</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 9: Mail Merge -->
+        <section class="slide theme-docs">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>WRITER</div>
+                    <div class="unit-tracker">
+                        <div class="tracker-item active">Documentation</div>
+                        <div class="tracker-item">Spreadsheets</div>
+                        <div class="tracker-item">Database</div>
+                    </div>
+                    <div class="slide-meta">09 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <div class="info-label">Automation</div>
+                        <h2 class="reveal-item">Mail Merge</h2>
+                        <p class="reveal-item">A powerful tool to create multiple documents from a single template. It merges a "Main Document" with a "Data Source" to print letters or labels en masse.</p>
+                        <div class="reveal-item info-grid">
+                            <div class="info-box">
+                                <div class="info-label">Component A</div>
+                                <div class="info-value">Main Document (Template)</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Component B</div>
+                                <div class="info-value">Data Source (Address List)</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 10: Styles -->
+        <section class="slide theme-docs">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>WRITER</div>
+                    <div class="unit-tracker">
+                        <div class="tracker-item active">Documentation</div>
+                        <div class="tracker-item">Spreadsheets</div>
+                        <div class="tracker-item">Database</div>
+                    </div>
+                    <div class="slide-meta">10 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <h2 class="reveal-item">Formatting Styles</h2>
+                        <p class="reveal-item">Styles act as a central command for formatting. Changing a style updates every paragraph using that style instantly.</p>
+                        <div class="reveal-item info-grid">
+                            <div class="info-box">
+                                <div class="info-label">Paragraph</div>
+                                <div class="info-value">Alignment, Line Spacing</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Character</div>
+                                <div class="info-value">Font Family, Color, Size</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Page</div>
+                                <div class="info-value">Margins, Headers/Footers</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 11: Custom Template -->
+        <section class="slide theme-docs">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>WRITER</div>
+                    <div class="unit-tracker">
+                        <div class="tracker-item active">Documentation</div>
+                        <div class="tracker-item">Spreadsheets</div>
+                        <div class="tracker-item">Database</div>
+                    </div>
+                    <div class="slide-meta">11 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <h2 class="reveal-item">Saving Templates</h2>
+                        <p class="reveal-item">Create your own templates to save time on recurring document types.</p>
+                        <div class="reveal-item code-block">
+                            1. Format your document (Styles/Logos)<br>
+                            2. File > Templates > Save As Template<br>
+                            3. Select Category (e.g., My Templates)<br>
+                            4. Click Save
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- UNIT 2: SPREADSHEETS -->
+        <!-- ============================================ -->
+
+        <!-- SLIDE 12: Subtotals -->
+        <section class="slide theme-sheets">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>CALC</div>
+                    <div class="unit-tracker">
+                        <div class="tracker-item">Documentation</div>
+                        <div class="tracker-item active">Spreadsheets</div>
+                        <div class="tracker-item">Database</div>
+                    </div>
+                    <div class="slide-meta">12 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <div class="info-label">Data Analysis</div>
+                        <h2 class="reveal-item">Subtotals</h2>
+                        <p class="reveal-item">Calculates subtotals and grand totals for a labeled list of data. It groups rows based on a specific column's value.</p>
+                        <div class="reveal-item info-box" style="border-left: 3px solid var(--brand-sheets);">
+                            <div class="info-label">Crucial Prerequisite</div>
+                            <div class="info-value">You MUST sort the data by the grouping column first.</div>
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 13: Multiple Operations -->
+        <section class="slide theme-sheets">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>CALC</div>
+                    <div class="unit-tracker">
+                        <div class="tracker-item">Documentation</div>
+                        <div class="tracker-item active">Spreadsheets</div>
+                        <div class="tracker-item">Database</div>
+                    </div>
+                    <div class="slide-meta">13 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <div class="info-label">What-If Analysis</div>
+                        <h2 class="reveal-item">Multiple Operations</h2>
+                        <p class="reveal-item">Similar to Excel's "Data Table". It allows you to calculate the same formula with a range of different input values simultaneously.</p>
+                        <div class="reveal-item info-grid">
+                            <div class="info-box">
+                                <div class="info-label">Use Case</div>
+                                <div class="info-value">Loan Interest Comparison</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Output</div>
+                                <div class="info-value">Matrix of Results</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 14: Consolidation -->
+        <section class="slide theme-sheets">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>CALC</div>
+                    <div class="unit-tracker">
+                        <div class="tracker-item">Documentation</div>
+                        <div class="tracker-item active">Spreadsheets</div>
+                        <div class="tracker-item">Database</div>
+                    </div>
+                    <div class="slide-meta">14 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <h2 class="reveal-item">Data Consolidation</h2>
+                        <p class="reveal-item">Combines data from multiple worksheets (e.g., Jan, Feb, Mar) into one Master Sheet using aggregation functions.</p>
+                        <div class="reveal-item info-grid">
+                            <div class="info-box">
+                                <div class="info-label">Method 1</div>
+                                <div class="info-value">By Position (Same Layout)</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Method 2</div>
+                                <div class="info-value">By Category (Row/Col Labels)</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 15: Scenarios -->
+        <section class="slide theme-sheets">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>CALC</div>
+                    <div class="unit-tracker">
+                        <div class="tracker-item">Documentation</div>
+                        <div class="tracker-item active">Spreadsheets</div>
+                        <div class="tracker-item">Database</div>
+                    </div>
+                    <div class="slide-meta">15 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <h2 class="reveal-item">Scenarios</h2>
+                        <p class="reveal-item">Allows you to save different sets of input values for the same cells. You can switch between "Best Case," "Worst Case," and "Likely Case" instantly.</p>
+                        <div class="reveal-item info-box">
+                            <div class="info-label">Feature</div>
+                            <div class="info-value">The Navigator Window allows rapid switching between saved scenarios.</div>
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 16: Goal Seek -->
+        <section class="slide theme-sheets">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>CALC</div>
+                    <div class="unit-tracker">
+                        <div class="tracker-item">Documentation</div>
+                        <div class="tracker-item active">Spreadsheets</div>
+                        <div class="tracker-item">Database</div>
+                    </div>
+                    <div class="slide-meta">16 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <div class="info-label">Reverse Engineering</div>
+                        <h2 class="reveal-item">Goal Seek</h2>
+                        <p class="reveal-item">Calculates the input value needed to achieve a specific goal output. It solves the equation backwards.</p>
+                        <div class="reveal-item code-block">
+                            Target Value: 5000 (Desired Monthly Income)<br>
+                            Formula Cell: B10 (Total Revenue)<br>
+                            Variable Cell: B2 (Units Sold)<br>
+                            <span style="color:#64748b">// Result: Needs 500 Units Sold</span>
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 17: Macros -->
+        <section class="slide theme-sheets">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>CALC</div>
+                    <div class="unit-tracker">
+                        <div class="tracker-item">Documentation</div>
+                        <div class="tracker-item active">Spreadsheets</div>
+                        <div class="tracker-item">Database</div>
+                    </div>
+                    <div class="slide-meta">17 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <div class="info-label">Automation</div>
+                        <h2 class="reveal-item">Macros</h2>
+                        <p class="reveal-item">A sequence of commands or keystrokes that are stored for later use. Recorded macros generate BASIC code to automate repetitive tasks.</p>
+                        <div class="reveal-item code-block" style="border-left: 3px solid var(--brand-sheets);">
+                            REM  ***** BASIC  *****<br>
+                            Sub Main<br>
+                            &nbsp;&nbsp;MsgBox "Hello World"<br>
+                            End Sub
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ============================================ -->
+        <!-- UNIT 3: RDBMS -->
+        <!-- ============================================ -->
+
+        <!-- SLIDE 18: Primary Key -->
+        <section class="slide theme-db">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>BASE</div>
+                    <div class="unit-tracker">
+                        <div class="tracker-item">Documentation</div>
+                        <div class="tracker-item">Spreadsheets</div>
+                        <div class="tracker-item active">Database</div>
+                    </div>
+                    <div class="slide-meta">18 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <div class="info-label">Entity Integrity</div>
+                        <h2 class="reveal-item">Primary Key</h2>
+                        <p class="reveal-item">A field that uniquely identifies every record in a database table. It ensures no duplicate records exist.</p>
+                        <div class="reveal-item info-grid">
+                            <div class="info-box">
+                                <div class="info-label">Rule 1</div>
+                                <div class="info-value">Must be Unique</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Rule 2</div>
+                                <div class="info-value">Cannot be NULL</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 19: DBMS Concept -->
+        <section class="slide theme-db">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>BASE</div>
+                    <div class="unit-tracker">
+                        <div class="tracker-item">Documentation</div>
+                        <div class="tracker-item">Spreadsheets</div>
+                        <div class="tracker-item active">Database</div>
+                    </div>
+                    <div class="slide-meta">19 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <h2 class="reveal-item">Concept of DBMS</h2>
+                        <p class="reveal-item">A Database Management System is software that defines, manipulates, retrieves, and manages data in a database.</p>
+                        <div class="reveal-item info-grid">
+                            <div class="info-box">
+                                <div class="info-label">Examples</div>
+                                <div class="info-value">MySQL, PostgreSQL, Oracle</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Function</div>
+                                <div class="info-value">Data Security & Concurrency</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 20: Integrity -->
+        <section class="slide theme-db">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>BASE</div>
+                    <div class="unit-tracker">
+                        <div class="tracker-item">Documentation</div>
+                        <div class="tracker-item">Spreadsheets</div>
+                        <div class="tracker-item active">Database</div>
+                    </div>
+                    <div class="slide-meta">20 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <h2 class="reveal-item">Referential Integrity</h2>
+                        <p class="reveal-item">A set of rules used to ensure that the relationship between records in related tables is valid. It prevents orphaned records.</p>
+                        <div class="reveal-item info-box">
+                            <div class="info-label">Constraint</div>
+                            <div class="info-value">Foreign Key value must match a Primary Key in the parent table.</div>
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 21: Relationships -->
+        <section class="slide theme-db">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>BASE</div>
+                    <div class="unit-tracker">
+                        <div class="tracker-item">Documentation</div>
+                        <div class="tracker-item">Spreadsheets</div>
+                        <div class="tracker-item active">Database</div>
+                    </div>
+                    <div class="slide-meta">21 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <h2 class="reveal-item">Relationships</h2>
+                        <p class="reveal-item">How tables connect based on common fields:</p>
+                        <div class="reveal-item info-grid">
+                            <div class="info-box">
+                                <div class="info-label">1:1</div>
+                                <div class="info-value">Person ↔ Passport</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">1:N</div>
+                                <div class="info-value">Class ↔ Students</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">M:N</div>
+                                <div class="info-value">Students ↔ Courses</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 22: SQL -->
+        <section class="slide theme-db">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>BASE</div>
+                    <div class="unit-tracker">
+                        <div class="tracker-item">Documentation</div>
+                        <div class="tracker-item">Spreadsheets</div>
+                        <div class="tracker-item active">Database</div>
+                    </div>
+                    <div class="slide-meta">22 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <h2 class="reveal-item">SQL Commands</h2>
+                        <p class="reveal-item">Structured Query Language is the standard for communicating with RDBMS.</p>
+                        <div class="reveal-item info-grid">
+                            <div class="info-box">
+                                <div class="info-label">DDL (Definition)</div>
+                                <div class="info-value">CREATE, ALTER, DROP</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">DML (Manipulation)</div>
+                                <div class="info-value">SELECT, INSERT, UPDATE</div>
+                            </div>
+                        </div>
+                        <div class="reveal-item code-block" style="margin-top:1rem;">
+                            SELECT * FROM Students WHERE Grade = 'A';
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 23: Conclusion -->
+        <section class="slide theme-default">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>SUMMARY</div>
+                    <div class="slide-meta">23 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <h2 class="reveal-item">Conclusion</h2>
+                        <p class="reveal-item">This project covered the advanced spectrum of Information Technology applications. From mastering standardization in Writer to performing complex data analysis in Calc and ensuring data integrity in Base, these skills form the backbone of modern digital literacy.</p>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SLIDE 24: Bibliography -->
+        <section class="slide theme-default">
+            <div class="card">
+                <div class="card-sidebar">
+                    <div class="brand-logo"><div class="brand-dot"></div>SOURCES</div>
+                    <div class="slide-meta">24 / 24</div>
+                </div>
+                <div class="card-content">
+                    <div class="content-layer">
+                        <h2 class="reveal-item">Bibliography</h2>
+                        <div class="reveal-item info-grid" style="grid-template-columns: 1fr;">
+                            <div class="info-box">
+                                <div class="info-label">Primary Source</div>
+                                <div class="info-value">NCERT Information Technology Textbook (Class X)</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Documentation</div>
+                                <div class="info-value">OpenOffice.org / LibreOffice Official Wiki</div>
+                            </div>
+                            <div class="info-box">
+                                <div class="info-label">Online Reference</div>
+                                <div class="info-value">W3Schools SQL Tutorial</div>
+                            </div>
+                        </div>
+                        <div class="reveal-item" style="margin-top:2rem; font-size:0.8rem; opacity:0.6;">
+                            Presentation generated for Academic Submission 2025.
+                        </div>
+                    </div>
+                    <div class="art-layer"><div class="abstract-shape"></div></div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // --- INTERSECTION OBSERVER LOGIC ---
+        // Handles animations and color theme switching
+        
+        const observerOptions = {
+            root: document.getElementById('scroller'),
+            threshold: 0.5
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    // 1. Trigger Card Animation
+                    entry.target.classList.add('in-view');
+
+                    // 2. Extract Theme Color from current slide class
+                    let newColor = '#6366f1'; // Default
+                    if (entry.target.classList.contains('theme-docs')) newColor = '#3b82f6';
+                    if (entry.target.classList.contains('theme-sheets')) newColor = '#10b981';
+                    if (entry.target.classList.contains('theme-db')) newColor = '#f97316';
+
+                    // 3. Update Global Abstract Shape Color
+                    document.querySelectorAll('.abstract-shape').forEach(shape => {
+                        shape.style.setProperty('--active-color', newColor);
+                    });
+                    
+                    // 4. Update dots
+                    const dot = entry.target.querySelector('.brand-dot');
+                    if(dot) dot.style.backgroundColor = newColor;
+                    if(dot) dot.style.boxShadow = `0 0 10px ${newColor}`;
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('section.slide').forEach(slide => {
+            observer.observe(slide);
+        });
+
+        // Initial Trigger
+        setTimeout(() => {
+            document.querySelector('section.slide').classList.add('in-view');
+        }, 100);
+    </script>
+</body>
+</html>
